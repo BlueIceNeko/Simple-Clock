@@ -1,0 +1,77 @@
+plugins {
+    id 'java'
+}
+
+group = 'top.blueicemiaow'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "com.google.code.gson:gson:2.11.0"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+def appJar = tasks.register('appJar', Jar) {
+    archiveFileName = 'clock.jar'
+    destinationDirectory = layout.buildDirectory.dir('intermediate/nested')
+
+    from(sourceSets.main.output) {
+        exclude 'top/blueicemiaow/clock/bootstrap/**'
+    }
+
+    from("LICENSE") {
+        rename { "${it}_${rootProject.name}" }
+    }
+}
+
+def jarInJar = tasks.register('jarInJar', Jar) {
+    dependsOn appJar
+
+    group = 'build'
+    description = 'Builds the runnable jar with nested application and Gson jars.'
+
+    archiveFileName = 'SimpleClock.jar'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+
+    manifest {
+        attributes(
+                'Main-Class': 'top.blueicemiaow.clock.bootstrap.Bootstrap',
+                'Implementation-Title': 'Simple Clock',
+                'Implementation-Version': project.version
+        )
+    }
+
+    from(sourceSets.main.output) {
+        include 'top/blueicemiaow/clock/bootstrap/**'
+    }
+
+    from(appJar.flatMap { it.archiveFile }) {
+        into 'META-INF/jars'
+        rename { 'clock.jar' }
+    }
+
+    from({ configurations.runtimeClasspath.filter { it.isFile() && it.name.endsWith('.jar') } }) {
+        into 'META-INF/jars'
+    }
+
+    from("LICENSE") {
+        rename { "${it}_${rootProject.name}" }
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named('jar', Jar) {
+    enabled = false
+}
+
+tasks.named('assemble') {
+    dependsOn jarInJar
+}
