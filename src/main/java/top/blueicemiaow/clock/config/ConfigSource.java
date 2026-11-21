@@ -12,7 +12,8 @@ import java.util.Objects;
  */
 public final class ConfigSource {
 
-    private static final String DEFAULT_RESOURCE = "/default_config.json";
+    public static final String DEFAULT_RESOURCE = "/default_config.json";
+    public static final String FULL_RESOURCE = "/full_config.json";
 
     private final Path file;
     private final String resource;
@@ -52,6 +53,11 @@ public final class ConfigSource {
         if (file != null) {
             return Files.newInputStream(file);
         }
+        return openResource(resource);
+    }
+
+    /** Opens a bundled resource, for example {@link #DEFAULT_RESOURCE}. */
+    public static InputStream openResource(String resource) throws IOException {
         InputStream stream = ConfigSource.class.getResourceAsStream(resource);
         if (stream == null) {
             throw new FileNotFoundException("Bundled configuration not found: " + resource);

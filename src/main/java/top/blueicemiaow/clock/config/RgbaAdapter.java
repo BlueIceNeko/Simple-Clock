@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 /**
- * Accepts RGBA colours as:
+ * Accepts RGBA colors as:
  * <ul>
  *     <li>{"r":255,"g":128,"b":0,"a":200}</li>
  *     <li>[255, 128, 0, 200] or [255, 128, 0] (alpha defaults to 255)</li>
@@ -45,7 +45,7 @@ public final class RgbaAdapter extends TypeAdapter<Rgba> {
             case BEGIN_ARRAY -> readArray(in);
             case BEGIN_OBJECT -> readObject(in);
             default -> throw new JsonSyntaxException(
-                    "Expected a colour as an array, object or hex string, but was " + token);
+                    "Expected a color as an array, object or hex string, but was " + token);
         };
     }
 
@@ -57,19 +57,19 @@ public final class RgbaAdapter extends TypeAdapter<Rgba> {
         Integer a = null;
         int index = 0;
         while (in.hasNext()) {
-            int component = readComponent(in, "colour[" + index + "]");
+            int component = readComponent(in, "color[" + index + "]");
             switch (index) {
                 case 0 -> r = component;
                 case 1 -> g = component;
                 case 2 -> b = component;
                 case 3 -> a = component;
-                default -> throw new JsonSyntaxException("A colour array must have 3 or 4 components");
+                default -> throw new JsonSyntaxException("A color array must have 3 or 4 components");
             }
             index++;
         }
         in.endArray();
         if (index < 3) {
-            throw new JsonSyntaxException("A colour array must have 3 or 4 components");
+            throw new JsonSyntaxException("A color array must have 3 or 4 components");
         }
         return new Rgba(r, g, b, a == null ? 255 : a);
     }
@@ -83,16 +83,16 @@ public final class RgbaAdapter extends TypeAdapter<Rgba> {
         while (in.hasNext()) {
             String name = in.nextName().toLowerCase(Locale.ROOT);
             switch (name) {
-                case "r", "red" -> r = readComponent(in, "colour.r");
-                case "g", "green" -> g = readComponent(in, "colour.g");
-                case "b", "blue" -> b = readComponent(in, "colour.b");
-                case "a", "alpha" -> a = readComponent(in, "colour.a");
+                case "r", "red" -> r = readComponent(in, "color.r");
+                case "g", "green" -> g = readComponent(in, "color.g");
+                case "b", "blue" -> b = readComponent(in, "color.b");
+                case "a", "alpha" -> a = readComponent(in, "color.a");
                 default -> in.skipValue();
             }
         }
         in.endObject();
         if (r == null || g == null || b == null) {
-            throw new JsonSyntaxException("A colour object needs r, g and b components");
+            throw new JsonSyntaxException("A color object needs r, g and b components");
         }
         return new Rgba(r, g, b, a == null ? 255 : a);
     }
@@ -129,7 +129,7 @@ public final class RgbaAdapter extends TypeAdapter<Rgba> {
         }
         if (value.length() != 6 && value.length() != 8) {
             throw new JsonSyntaxException(
-                    "Invalid colour string '" + raw + "'. Use #RRGGBB, #RRGGBBAA, #RGB or #RGBA");
+                    "Invalid color string '" + raw + "'. Use #RRGGBB, #RRGGBBAA, #RGB or #RGBA");
         }
         try {
             int r = Integer.parseInt(value.substring(0, 2), 16);
@@ -139,7 +139,7 @@ public final class RgbaAdapter extends TypeAdapter<Rgba> {
             return new Rgba(r, g, b, a);
         } catch (NumberFormatException e) {
             throw new JsonSyntaxException(
-                    "Invalid hex colour '" + raw + "'. Use #RRGGBB, #RRGGBBAA, #RGB or #RGBA", e);
+                    "Invalid hex color '" + raw + "'. Use #RRGGBB, #RRGGBBAA, #RGB or #RGBA", e);
         }
     }
 }

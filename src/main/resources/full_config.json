@@ -1,0 +1,66 @@
+﻿{
+  "title": "Simple Clock",
+  "background": [0, 0, 0, 255],
+  "backgroundImage": null,
+  "opacity": 1.0,
+  "zone": null,
+  "refreshMillis": 50,
+  "alwaysOnTop": false,
+  "hideCursor": false,
+  "screen": 0,
+  "layout": [
+    {
+      "type": "text",
+      "enabled": true,
+      "text": "{time}",
+      "anchor": "center",
+      "x": 0,
+      "y": -32,
+      "color": [191, 191, 191, 255],
+      "fontFamily": "Noto Sans",
+      "fontSize": 256,
+      "fontStyle": "plain",
+      "textAlign": "center",
+      "timeFormat": "HH:mm:ss"
+    },
+    {
+      "type": "text",
+      "enabled": true,
+      "text": "{date}, {week}",
+      "anchor": "center",
+      "x": 0,
+      "y": -160,
+      "color": [191, 191, 191, 255],
+      "fontFamily": "Noto Sans",
+      "fontSize": 32,
+      "fontStyle": "plain",
+      "textAlign": "center",
+      "dateFormat": "MM/dd/yyyy",
+      "weekDef": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    },
+    {
+      "type": "text",
+      "enabled": true,
+      "text": "Hello, world!",
+      "anchor": "center",
+      "x": 0,
+      "y": 128,
+      "color": [191, 191, 191, 255],
+      "fontFamily": "Noto Sans",
+      "fontSize": 32,
+      "fontStyle": "plain",
+      "textAlign": "center"
+    },
+    {
+      "type": "image",
+      "enabled": false,
+      "path": null,
+      "anchor": "center",
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "opacity": 1.0
+    }
+  ]
+}

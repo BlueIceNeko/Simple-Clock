@@ -30,7 +30,7 @@ import java.util.function.Supplier;
  */
 public final class ClockPanel extends JPanel {
 
-    private static final Rgba DEFAULT_TEXT_COLOR = new Rgba(240, 248, 255, 255);
+    private static final Rgba DEFAULT_TEXT_COLOR = new Rgba(191, 191, 191, 255);
 
     private LoadedConfig loaded;
     private boolean perPixelTranslucent;
@@ -188,30 +188,56 @@ public final class ClockPanel extends JPanel {
             g2.fillRect(x, y, w, h);
         } else {
             // Alpha values still work on systems without per-pixel translucency:
-            // the colour is composited over black instead.
+            // the color is composited over black instead.
             g2.setColor(Color.BLACK);
             g2.fillRect(x, y, w, h);
             g2.setColor(background);
             g2.fillRect(x, y, w, h);
         }
+
+        BufferedImage image = loaded.backgroundImage();
+        if (image != null) {
+            paintBackgroundImage(g2, image, width, height);
+        }
+    }
+
+    /**
+     * Draws the background image centered and scaled to cover the whole
+     * window without changing its aspect ratio, over the background color.
+     */
+    private void paintBackgroundImage(Graphics2D g2, BufferedImage image,
+                                      int width, int height) {
+        double scale = Math.max(width / (double) image.getWidth(),
+                height / (double) image.getHeight());
+        int targetWidth = Math.max(width, (int) Math.ceil(image.getWidth() * scale));
+        int targetHeight = Math.max(height, (int) Math.ceil(image.getHeight() * scale));
+        int targetX = (width - targetWidth) / 2;
+        int targetY = (height - targetHeight) / 2;
+
+        double opacity = loaded.config().backgroundOpacity();
+        g2.setComposite(AlphaComposite.SrcOver.derive((float) opacity));
+        g2.drawImage(image, targetX, targetY, targetWidth, targetHeight, null);
+        g2.setComposite(AlphaComposite.SrcOver);
     }
 
     private void paintTextItem(Graphics2D g2, LayoutItem item, int width, int height, ZonedDateTime now) {
         String text = TimeText.render(item.getText(), now,
-                loaded.timeFormatter(item), loaded.dateFormatter(item));
+                loaded.timeFormatter(item), loaded.dateFormatter(item), loaded.weekDef(item));
         paintText(g2, item, text, width, height);
     }
 
     /**
-     * Text containing {@code {time}} or {@code {date}} changes over time and
-     * is the only content that needs timed repaints.
+     * Text containing {@code {time}}, {@code {date}} or {@code {week}} changes
+     * over time and is the only content that needs timed repaints.
      */
     private boolean isDynamic(LayoutItem item) {
         if (item == null || !item.isText() || item.getText() == null) {
             return false;
         }
         String text = item.getText();
-        return text.contains("{time}") || text.contains("{date}");
+        return text.contains(TimeText.PLACEHOLDER_TIME)
+                || text.contains(TimeText.PLACEHOLDER_DATE)
+                || text.contains(TimeText.PLACEHOLDER_WEEK);
     }
 
     /**
@@ -220,7 +246,7 @@ public final class ClockPanel extends JPanel {
      */
     private Rectangle textBounds(LayoutItem item, ZonedDateTime now, int width, int height) {
         String text = TimeText.render(item.getText(), now,
-                loaded.timeFormatter(item), loaded.dateFormatter(item));
+                loaded.timeFormatter(item), loaded.dateFormatter(item), item.getWeekDef());
 
         Font font = fontFor(item);
         FontMetrics metrics = metricsFor(font);
@@ -339,14 +365,10 @@ public final class ClockPanel extends JPanel {
     }
 
     private Font fontFor(LayoutItem item) {
-        String family = item.getFontFamily() != null && !item.getFontFamily().isBlank()
-                ? item.getFontFamily()
-                : loaded.config().getFontFamily();
-        String styleName = item.getFontStyle() != null && !item.getFontStyle().isBlank()
-                ? item.getFontStyle()
-                : loaded.config().getFontStyle();
+        String family = item.getFontFamily();
+        String styleName = item.getFontStyle();
         int style = FontStyle.parse(styleName).awtStyle();
-        int size = item.getFontSize() != null ? item.getFontSize() : loaded.config().getFontSize();
+        int size = item.getFontSize();
         String key = family + '\u0000' + style + '\u0000' + size;
         return fontCache.computeIfAbsent(key, ignored -> new Font(family, style, size));
     }

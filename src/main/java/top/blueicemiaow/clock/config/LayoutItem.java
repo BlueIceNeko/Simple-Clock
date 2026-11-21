@@ -1,5 +1,7 @@
 package top.blueicemiaow.clock.config;
 
+import top.blueicemiaow.clock.render.TimeText;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -14,19 +16,19 @@ public final class LayoutItem {
     public static final String TYPE_IMAGE = "image";
 
     private static final Set<String> TYPES = Set.of(TYPE_TEXT, TYPE_IMAGE);
-    private static final Set<String> TEXT_ALIGNS = Set.of("left", "center", "centre", "right");
+    private static final Set<String> TEXT_ALIGNS = Set.of("left", "center", "right");
 
     private String type;
     private String anchor;
-    private Boolean centerX;
-    private Boolean centerY;
+    /** Whether this item is drawn. Missing values default to enabled. */
+    private Boolean enabled;
     private int x;
     private int y;
 
     private Rgba color;
-    private String fontFamily;
-    private Integer fontSize;
-    private String fontStyle;
+    private String fontFamily = TimeText.DEFAULT_FONT_FAMILY;
+    private Integer fontSize = TimeText.DEFAULT_FONT_SIZE;
+    private String fontStyle = TimeText.DEFAULT_FONT_STYLE;
 
     private String text;
     private String textAlign;
@@ -37,10 +39,13 @@ public final class LayoutItem {
     private Double opacity;
 
     /** Optional per-item time pattern. Used by text {@code {time}}. */
-    private String timeFormat;
+    private String timeFormat = TimeText.DEFAULT_TIME_FORMAT;
 
     /** Optional per-item date pattern. Used by text {@code {date}}. */
-    private String dateFormat;
+    private String dateFormat = TimeText.DEFAULT_DATE_FORMAT;
+
+    /** Optional seven names for {@code {week}}, Sunday through Saturday. */
+    private List<String> weekDef = TimeText.DEFAULT_WEEK_DEF;
 
     public LayoutItem() {
     }
@@ -48,7 +53,7 @@ public final class LayoutItem {
     public static LayoutItem time() {
         LayoutItem item = new LayoutItem();
         item.type = TYPE_TEXT;
-        item.text = "{time}";
+        item.text = TimeText.PLACEHOLDER_TIME;
         item.anchor = "center";
         return item;
     }
@@ -61,12 +66,8 @@ public final class LayoutItem {
         return anchor;
     }
 
-    public Boolean getCenterX() {
-        return centerX;
-    }
-
-    public Boolean getCenterY() {
-        return centerY;
+    public boolean isEnabled() {
+        return enabled == null || enabled;
     }
 
     public int getX() {
@@ -82,15 +83,15 @@ public final class LayoutItem {
     }
 
     public String getFontFamily() {
-        return fontFamily;
+        return fontFamily == null || fontFamily.isBlank() ? TimeText.DEFAULT_FONT_FAMILY : fontFamily;
     }
 
     public Integer getFontSize() {
-        return fontSize;
+        return fontSize == null ? TimeText.DEFAULT_FONT_SIZE : fontSize;
     }
 
     public String getFontStyle() {
-        return fontStyle;
+        return fontStyle == null || fontStyle.isBlank() ? TimeText.DEFAULT_FONT_STYLE : fontStyle;
     }
 
     public String getText() {
@@ -118,11 +119,15 @@ public final class LayoutItem {
     }
 
     public String getTimeFormat() {
-        return timeFormat;
+        return timeFormat == null || timeFormat.isBlank() ? TimeText.DEFAULT_TIME_FORMAT : timeFormat;
     }
 
     public String getDateFormat() {
-        return dateFormat;
+        return dateFormat == null || dateFormat.isBlank() ? TimeText.DEFAULT_DATE_FORMAT : dateFormat;
+    }
+
+    public List<String> getWeekDef() {
+        return weekDef == null ? TimeText.DEFAULT_WEEK_DEF : weekDef;
     }
 
     public String typeOrEmpty() {
@@ -148,19 +153,19 @@ public final class LayoutItem {
     }
 
     /**
-     * Resolves anchor, explicit anchor wins over the centerX/centerY flags.
-     * With neither set, the item is horizontally and vertically centered.
+     * Resolves the anchor. With no explicit anchor the item is centered.
      */
     public Anchor resolveAnchor() {
         if (anchor != null && !anchor.isBlank()) {
             return Anchor.parse(anchor);
         }
-        boolean cx = centerX == null || centerX;
-        boolean cy = centerY == null || centerY;
-        return Anchor.forCenterFlags(cx, cy);
+        return Anchor.CENTER;
     }
 
     public void validate(int index, List<String> errors) {
+        if (!isEnabled()) {
+            return;
+        }
         String field = "layout[" + index + "]";
         String parsedType = typeOrEmpty();
         if (parsedType.isEmpty()) {
@@ -222,6 +227,16 @@ public final class LayoutItem {
                 java.time.format.DateTimeFormatter.ofPattern(dateFormat);
             } catch (IllegalArgumentException e) {
                 errors.add(field + ".dateFormat is not a valid date pattern: " + e.getMessage());
+            }
+        }
+        if (weekDef != null) {
+            if (weekDef.size() != 7) {
+                errors.add(field + ".weekDef must contain exactly 7 entries (Sunday to Saturday)");
+            }
+            for (int i = 0; i < weekDef.size(); i++) {
+                if (weekDef.get(i) == null) {
+                    errors.add(field + ".weekDef[" + i + "] must not be null");
+                }
             }
         }
     }

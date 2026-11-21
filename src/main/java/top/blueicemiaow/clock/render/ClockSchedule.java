@@ -48,17 +48,21 @@ public final class ClockSchedule {
             }
             if (item.isText() && item.getText() != null) {
                 String text = item.getText();
-                if (text.contains("{time}")) {
-                    Long itemResolution = resolutionOf(timePattern(item, config));
+                if (text.contains(TimeText.PLACEHOLDER_TIME)) {
+                    Long itemResolution = resolutionOf(item.getTimeFormat());
                     if (itemResolution != null) {
                         resolution = Math.min(resolution, itemResolution);
                         dynamic = true;
                     }
                 }
-                if (text.contains("{date}")) {
-                    Long itemResolution = resolutionOf(datePattern(item));
+                if (text.contains(TimeText.PLACEHOLDER_DATE)) {
+                    Long itemResolution = resolutionOf(item.getDateFormat());
                     resolution = Math.min(resolution,
                             itemResolution == null ? MILLIS_PER_DAY : itemResolution);
+                    dynamic = true;
+                }
+                if (text.contains(TimeText.PLACEHOLDER_WEEK)) {
+                    resolution = Math.min(resolution, MILLIS_PER_DAY);
                     dynamic = true;
                 }
             }
@@ -165,17 +169,5 @@ public final class ClockSchedule {
 
     private static long divideRoundingUp(long value, long divisor) {
         return (value + divisor - 1) / divisor;
-    }
-
-    private static String timePattern(LayoutItem item, ClockConfig config) {
-        return item != null && item.getTimeFormat() != null && !item.getTimeFormat().isBlank()
-                ? item.getTimeFormat()
-                : config.getFormat();
-    }
-
-    private static String datePattern(LayoutItem item) {
-        return item != null && item.getDateFormat() != null && !item.getDateFormat().isBlank()
-                ? item.getDateFormat()
-                : TimeText.DEFAULT_DATE_FORMAT;
     }
 }

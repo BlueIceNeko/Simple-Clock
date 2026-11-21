@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * An RGBA colour. Every component is in the inclusive range 0..255.
+ * An RGBA color. Every component is in the inclusive range 0..255.
  */
 public final class Rgba {
 

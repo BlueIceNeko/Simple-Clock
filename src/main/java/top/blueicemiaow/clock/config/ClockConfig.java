@@ -1,34 +1,39 @@
 package top.blueicemiaow.clock.config;
 
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Root configuration object. All fields are optional; missing fields keep the
  * defaults below.<p>
+ * Defaults that only concern text components live in
+ * {@link top.blueicemiaow.clock.render.TimeText}.<p>
  * A complete example is bundled as {@code default_config.json}.
  */
 public final class ClockConfig {
 
-    private Rgba background = new Rgba(8, 12, 20, 255);
+    public static final String DEFAULT_TITLE = "Simple Clock";
 
-    /** DateTimeFormatter pattern, for example HH:mm:ss. */
-    private String format = "HH:mm:ss";
+    private Rgba background = new Rgba(0, 0, 0, 255);
+
+    /** Optional background image, painted over the background color. */
+    private String backgroundImage = null;
+
+    /** Background image opacity, 0.0 to 1.0. */
+    private Double opacity = 1.0;
+
+    /** Window title. Blank values fall back to {@link #DEFAULT_TITLE}. */
+    private String title = DEFAULT_TITLE;
 
     /** Optional IANA zone id, for example Asia/Shanghai. Defaults to the system zone. */
-    private String zone;
-
-    private String fontFamily = "MicrosoftYaHei";
-    private int fontSize = 192;
-    private String fontStyle = "plain";
+    private String zone = null;
 
     /** Repaint interval in milliseconds. */
-    private int refreshMillis = 100;
+    private int refreshMillis = 50;
 
-    private boolean alwaysOnTop = true;
-    private boolean hideCursor = true;
+    private boolean alwaysOnTop = false;
+    private boolean hideCursor = false;
 
     /** Zero-based screen index. Out-of-range values fall back to screen 0. */
     private int screen = 0;
@@ -42,24 +47,20 @@ public final class ClockConfig {
         return background;
     }
 
-    public String getFormat() {
-        return format;
+    public String getTitle() {
+        return title == null || title.isBlank() ? DEFAULT_TITLE : title;
+    }
+
+    public String getBackgroundImage() {
+        return backgroundImage == null || backgroundImage.isBlank() ? null : backgroundImage;
+    }
+
+    public double backgroundOpacity() {
+        return opacity == null ? 1.0 : opacity;
     }
 
     public String getZone() {
         return zone;
-    }
-
-    public String getFontFamily() {
-        return fontFamily;
-    }
-
-    public int getFontSize() {
-        return fontSize;
-    }
-
-    public String getFontStyle() {
-        return fontStyle;
     }
 
     public int getRefreshMillis() {
@@ -99,14 +100,8 @@ public final class ClockConfig {
             background.validate("background", errors);
         }
 
-        if (format == null || format.isBlank()) {
-            errors.add("format must not be blank");
-        } else {
-            try {
-                DateTimeFormatter.ofPattern(format);
-            } catch (IllegalArgumentException e) {
-                errors.add("format is not a valid time pattern: " + e.getMessage());
-            }
+        if (opacity != null && (opacity < 0.0 || opacity > 1.0)) {
+            errors.add("opacity must be between 0.0 and 1.0");
         }
 
         if (zone != null && !zone.isBlank()) {
@@ -117,40 +112,14 @@ public final class ClockConfig {
             }
         }
 
-        if (fontFamily == null || fontFamily.isBlank()) {
-            errors.add("fontFamily must not be blank");
-        }
-        if (fontSize < 1 || fontSize > 10_000) {
-            errors.add("fontSize must be between 1 and 10000");
-        }
-        if (fontStyle == null || fontStyle.isBlank()) {
-            errors.add("fontStyle must not be blank");
-        } else {
-            try {
-                FontStyle.parse(fontStyle);
-            } catch (IllegalArgumentException e) {
-                errors.add("fontStyle: " + e.getMessage());
-            }
-        }
-
         if (refreshMillis < 16 || refreshMillis > 60_000) {
             errors.add("refreshMillis must be between 16 and 60000");
         }
         if (screen < 0) {
             errors.add("screen must be zero or greater");
         }
-        if (layout == null) {
-            errors.add("layout must not be null");
-        } else {
-            for (int i = 0; i < layout.size(); i++) {
-                LayoutItem item = layout.get(i);
-                if (item == null) {
-                    errors.add("layout[" + i + "] must not be null");
-                } else {
-                    item.validate(i, errors);
-                }
-            }
-        }
+        // The layout array is validated item by item in ConfigLoader so that a
+        // malformed component does not stop startup.
         return errors;
     }
 }

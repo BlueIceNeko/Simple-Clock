@@ -45,19 +45,6 @@ public enum Anchor {
         return base + offsetY;
     }
 
-    public static Anchor forCenterFlags(boolean centerX, boolean centerY) {
-        if (centerX && centerY) {
-            return CENTER;
-        }
-        if (centerX) {
-            return TOP_CENTER;
-        }
-        if (centerY) {
-            return CENTER_LEFT;
-        }
-        return TOP_LEFT;
-    }
-
     public static Anchor parse(String raw) {
         if (raw == null) {
             return null;
@@ -68,13 +55,13 @@ public enum Anchor {
                 .replaceAll("-+", "-");
         return switch (key) {
             case "top-left", "tl", "nw", "north-west", "left-top" -> TOP_LEFT;
-            case "top-center", "top-centre", "tc", "n", "north", "center-top", "centre-top" -> TOP_CENTER;
+            case "top-center", "tc", "n", "north", "center-top" -> TOP_CENTER;
             case "top-right", "tr", "ne", "north-east", "right-top" -> TOP_RIGHT;
-            case "center-left", "centre-left", "cl", "w", "west", "left-center", "left-centre" -> CENTER_LEFT;
-            case "center", "centre", "c", "middle", "center-center", "centre-centre" -> CENTER;
-            case "center-right", "centre-right", "cr", "e", "east", "right-center", "right-centre" -> CENTER_RIGHT;
+            case "center-left", "cl", "w", "west", "left-center" -> CENTER_LEFT;
+            case "center", "c", "middle", "center-center" -> CENTER;
+            case "center-right", "cr", "e", "east", "right-center" -> CENTER_RIGHT;
             case "bottom-left", "bl", "sw", "south-west", "left-bottom" -> BOTTOM_LEFT;
-            case "bottom-center", "bottom-centre", "bc", "s", "south", "center-bottom", "centre-bottom" -> BOTTOM_CENTER;
+            case "bottom-center", "bc", "s", "south", "center-bottom" -> BOTTOM_CENTER;
             case "bottom-right", "br", "se", "south-east", "right-bottom" -> BOTTOM_RIGHT;
             default -> throw new IllegalArgumentException(
                     "Unknown anchor '" + raw + "'. Use top-left, top-center, top-right, "

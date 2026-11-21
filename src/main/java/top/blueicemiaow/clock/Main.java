@@ -1,17 +1,24 @@
 package top.blueicemiaow.clock;
 
 import top.blueicemiaow.clock.config.ConfigException;
+import top.blueicemiaow.clock.config.ConfigGenerator;
 import top.blueicemiaow.clock.config.ConfigLoader;
 import top.blueicemiaow.clock.config.ConfigSource;
 import top.blueicemiaow.clock.config.LayoutItem;
 import top.blueicemiaow.clock.config.LoadedConfig;
+import top.blueicemiaow.clock.render.TimeText;
 import top.blueicemiaow.clock.ui.ClockWindow;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import java.awt.GraphicsEnvironment;
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Path;
 
 public final class Main {
+
+    public static final String version = "1.1.0";
 
     private Main() {
     }
@@ -33,6 +40,11 @@ public final class Main {
             return;
         }
 
+        if (options.generateConfig() || options.generateFullConfig()) {
+            generateConfig(options.generateFullConfig());
+            return;
+        }
+
         ConfigSource source = ConfigSource.resolve(options.config());
         LoadedConfig loaded;
         try {
@@ -45,6 +57,7 @@ public final class Main {
 
         if (options.check()) {
             System.out.println("Configuration OK: " + source.label());
+            System.out.println("Title: " + loaded.config().getTitle());
             System.out.println("Layout items: " + loaded.config().getLayout().size());
             for (int i = 0; i < loaded.config().getLayout().size(); i++) {
                 LayoutItem item = loaded.config().getLayout().get(i);
@@ -52,11 +65,15 @@ public final class Main {
                     continue;
                 }
                 if (item.isText() && item.getText() != null) {
-                    if (item.getText().contains("{time}")) {
+                    if (item.getText().contains(TimeText.PLACEHOLDER_TIME)) {
                         System.out.println("  [" + i + "] time format: " + loaded.timePattern(item));
                     }
-                    if (item.getText().contains("{date}")) {
+                    if (item.getText().contains(TimeText.PLACEHOLDER_DATE)) {
                         System.out.println("  [" + i + "] date format: " + loaded.datePattern(item));
+                    }
+                    if (item.getText().contains(TimeText.PLACEHOLDER_WEEK)) {
+                        System.out.println("  [" + i + "] week names: "
+                                + String.join(", ", loaded.weekDef(item)));
                     }
                 }
             }
@@ -82,6 +99,21 @@ public final class Main {
                 System.exit(1);
             }
         });
+    }
+
+    private static void generateConfig(boolean full) {
+        Path destination = Path.of("config.json").toAbsolutePath().normalize();
+        try {
+            ConfigGenerator.generate(full, destination);
+            System.out.println("Created " + destination + " from the bundled "
+                    + (full ? "full" : "default") + " configuration.");
+        } catch (FileAlreadyExistsException e) {
+            System.err.println("Refusing to overwrite existing " + destination);
+            System.exit(1);
+        } catch (IOException e) {
+            System.err.println("Unable to write " + destination + ": " + e.getMessage());
+            System.exit(1);
+        }
     }
 
     private static void reportError(String message, boolean checkOnly) {

@@ -2,15 +2,15 @@ plugins {
     id 'java'
 }
 
-group = 'top.blueicemiaow'
-version = '1.0.0'
+version = project.app_version
+group = project.maven_group
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation "com.google.code.gson:gson:2.11.0"
+    implementation "com.google.code.gson:gson:${project.gson_version}"
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -19,7 +19,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 def appJar = tasks.register('appJar', Jar) {
-    archiveFileName = 'clock.jar'
+    archiveFileName = "clock-${project.version}.jar"
     destinationDirectory = layout.buildDirectory.dir('intermediate/nested')
 
     from(sourceSets.main.output) {
@@ -27,7 +27,7 @@ def appJar = tasks.register('appJar', Jar) {
     }
 
     from("LICENSE") {
-        rename { "${it}_${rootProject.name}" }
+        rename { "${it}_${project.archives_base_name}" }
     }
 }
 
@@ -37,7 +37,7 @@ def jarInJar = tasks.register('jarInJar', Jar) {
     group = 'build'
     description = 'Builds the runnable jar with nested application and Gson jars.'
 
-    archiveFileName = 'SimpleClock.jar'
+    archiveFileName = "${project.archives_base_name}-${project.version}.jar"
     destinationDirectory = layout.buildDirectory.dir('libs')
 
     manifest {
@@ -54,7 +54,6 @@ def jarInJar = tasks.register('jarInJar', Jar) {
 
     from(appJar.flatMap { it.archiveFile }) {
         into 'META-INF/jars'
-        rename { 'clock.jar' }
     }
 
     from({ configurations.runtimeClasspath.filter { it.isFile() && it.name.endsWith('.jar') } }) {
@@ -62,10 +61,14 @@ def jarInJar = tasks.register('jarInJar', Jar) {
     }
 
     from("LICENSE") {
-        rename { "${it}_${rootProject.name}" }
+        rename { "${it}_${project.archives_base_name}" }
     }
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+java {
+    withSourcesJar()
 }
 
 tasks.named('jar', Jar) {

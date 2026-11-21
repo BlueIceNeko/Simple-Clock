@@ -35,8 +35,6 @@ import java.time.ZonedDateTime;
  */
 public final class ClockWindow {
 
-    private static final String TITLE = "BlueIceNeko's Clock";
-
     private final ConfigSource source;
     private LoadedConfig loaded;
 
@@ -72,7 +70,7 @@ public final class ClockWindow {
         perPixelTranslucent = fullscreen && shouldUsePerPixelTranslucency(device);
 
         panel = new ClockPanel(loaded, perPixelTranslucent);
-        frame = new JFrame(TITLE);
+        frame = new JFrame(loaded.config().getTitle());
         frame.setUndecorated(fullscreen);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(!fullscreen);
@@ -107,6 +105,7 @@ public final class ClockWindow {
             perPixelTranslucent = fullscreen && shouldUsePerPixelTranslucency(device);
 
             frame.setAlwaysOnTop(next.config().isAlwaysOnTop());
+            frame.setTitle(next.config().getTitle());
             if (fullscreen) {
                 frame.setBounds(screenBounds(device));
             } else {

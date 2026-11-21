@@ -8,7 +8,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,19 +20,6 @@ public final class ImageStore {
 
     public ImageStore(Path baseDirectory) {
         this.baseDirectory = baseDirectory;
-    }
-
-    public void loadAll(List<LayoutItem> layout) throws ConfigException {
-        for (int i = 0; i < layout.size(); i++) {
-            LayoutItem item = layout.get(i);
-            if (item != null && item.isImage()) {
-                try {
-                    load(item.getPath());
-                } catch (Exception e) {
-                    throw new ConfigException("layout[" + i + "].path: " + e.getMessage(), e);
-                }
-            }
-        }
     }
 
     public BufferedImage get(LayoutItem item) {
